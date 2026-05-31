@@ -1,8 +1,9 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getActiveOrganization, getSession } from "@/lib/session";
+import { getActiveOrganization, getSession, listUserOrganizations } from "@/lib/session";
 import { getAccessibleFirms } from "@/lib/firm";
 import { migratePendingFirmAccess } from "@/app/actions/access";
+import { auth } from "@/lib/auth";
 import {
   SidebarInset,
   SidebarProvider,
@@ -22,12 +23,32 @@ export default async function DashboardLayout({
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const org = await getActiveOrganization().catch(() => null);
+  let org = await getActiveOrganization().catch(() => null);
+
+  if (!org) {
+    // No active org. Check if the user belongs to one (e.g. accepted an invite).
+    const orgs = await listUserOrganizations().catch(() => [] as { id: string }[]);
+    const firstOrg = Array.isArray(orgs) ? (orgs as { id: string }[])[0] : null;
+
+    if (firstOrg) {
+      // Silently set the first membership as active using the server API.
+      // nextCookies() in auth.ts allows setting cookies from server context.
+      await auth.api
+        .setActiveOrganization({
+          headers: await headers(),
+          body: { organizationId: firstOrg.id },
+        })
+        .catch(() => null);
+      org = await getActiveOrganization().catch(() => null);
+    }
+
+    if (!org) redirect("/onboarding");
+  }
 
   // Silently migrate any pending invitation firm access for this user.
-  if (org) await migratePendingFirmAccess().catch(() => null);
+  await migratePendingFirmAccess().catch(() => null);
 
-  const firms = org ? await getAccessibleFirms(org.id) : [];
+  const firms = await getAccessibleFirms(org.id);
 
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
@@ -38,7 +59,7 @@ export default async function DashboardLayout({
         <AppSidebar
           userName={session.user.name}
           userEmail={session.user.email}
-          organizationName={org?.name ?? "No organization"}
+          organizationName={org.name}
           firms={firms}
         />
         <SidebarInset>
@@ -46,13 +67,11 @@ export default async function DashboardLayout({
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <Badge variant="outline" className="rounded-full">
-              {org?.name ?? "No organization"}
+              {org.name}
             </Badge>
-            {org && (
-              <div className="ml-auto">
-                <HeaderAddFirm />
-              </div>
-            )}
+            <div className="ml-auto">
+              <HeaderAddFirm />
+            </div>
           </header>
           {children}
         </SidebarInset>

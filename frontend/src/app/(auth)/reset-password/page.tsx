@@ -9,11 +9,17 @@ import {
 } from "@/components/ui/card";
 import { Logo } from "@/components/site/logo";
 import { getSession } from "@/lib/session";
-import { SignupForm } from "./signup-form";
+import { ResetPasswordForm } from "./reset-password-form";
 
-export default async function SignupPage() {
+export default async function ResetPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string; error?: string }>;
+}) {
   const session = await getSession();
   if (session) redirect("/dashboard");
+
+  const { token, error } = await searchParams;
 
   return (
     <div className="relative flex min-h-dvh flex-1 items-center justify-center px-6 py-16">
@@ -35,20 +41,20 @@ export default async function SignupPage() {
 
         <Card className="border-border/60 bg-card/60 backdrop-blur">
           <CardHeader>
-            <CardTitle className="text-2xl">Create your account</CardTitle>
+            <CardTitle className="text-2xl">Set new password</CardTitle>
             <CardDescription>
-              You&apos;ll set up your workspace on the next step.
+              Choose a strong password for your account.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
-            <SignupForm />
+            <ResetPasswordForm token={token} urlError={error} />
+
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
               <Link
                 href="/login"
                 className="font-medium text-foreground hover:underline"
               >
-                Sign in
+                Back to sign in
               </Link>
             </p>
           </CardContent>

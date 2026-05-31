@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/card";
 import { Logo } from "@/components/site/logo";
 import { getSession } from "@/lib/session";
-import { SignupForm } from "./signup-form";
+import { ForgotPasswordForm } from "./forgot-password-form";
 
-export default async function SignupPage() {
+export default async function ForgotPasswordPage() {
   const session = await getSession();
   if (session) redirect("/dashboard");
 
@@ -35,15 +35,17 @@ export default async function SignupPage() {
 
         <Card className="border-border/60 bg-card/60 backdrop-blur">
           <CardHeader>
-            <CardTitle className="text-2xl">Create your account</CardTitle>
+            <CardTitle className="text-2xl">Reset your password</CardTitle>
             <CardDescription>
-              You&apos;ll set up your workspace on the next step.
+              Enter your email and we&apos;ll send you a link to reset your
+              password.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
-            <SignupForm />
+            <ForgotPasswordForm />
+
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              Remembered it?{" "}
               <Link
                 href="/login"
                 className="font-medium text-foreground hover:underline"

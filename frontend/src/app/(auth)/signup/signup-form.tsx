@@ -6,16 +6,7 @@ import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signUp, organization } from "@/lib/auth-client";
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
-}
+import { signUp } from "@/lib/auth-client";
 
 export function SignupForm() {
   const router = useRouter();
@@ -31,47 +22,26 @@ export function SignupForm() {
     const name = String(form.get("name") ?? "").trim();
     const email = String(form.get("email") ?? "").trim();
     const password = String(form.get("password") ?? "");
-    const orgName = String(form.get("organization") ?? "").trim();
-    const slug = slugify(orgName) || slugify(email.split("@")[1] ?? "workspace");
 
-    const signupResult = await signUp.email({ name, email, password });
-    if (signupResult.error) {
-      setError(signupResult.error.message ?? "Sign up failed.");
+    const { error } = await signUp.email({ name, email, password });
+    if (error) {
+      setError(error.message ?? "Sign up failed.");
       setPending(false);
       return;
     }
 
-    const orgResult = await organization.create({ name: orgName, slug });
-    if (orgResult.error) {
-      setError(
-        orgResult.error.message ??
-          "Account created but workspace setup failed.",
-      );
-      setPending(false);
-      return;
-    }
-
-    const orgId = orgResult.data?.id;
-    if (orgId) {
-      await organization.setActive({ organizationId: orgId });
-    }
-
-    router.push("/dashboard");
-    router.refresh();
+    router.push("/onboarding");
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <Label htmlFor="name">Your name</Label>
-        <Input id="name" name="name" autoComplete="name" required />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="organization">Company / workspace name</Label>
         <Input
-          id="organization"
-          name="organization"
-          placeholder="blackPome"
+          id="name"
+          name="name"
+          autoComplete="name"
+          placeholder="Alex Kim"
           required
         />
       </div>
@@ -82,6 +52,7 @@ export function SignupForm() {
           name="email"
           type="email"
           autoComplete="email"
+          placeholder="you@company.com"
           required
         />
       </div>
@@ -92,6 +63,7 @@ export function SignupForm() {
           name="password"
           type="password"
           autoComplete="new-password"
+          placeholder="••••••••"
           minLength={8}
           required
         />
@@ -105,7 +77,7 @@ export function SignupForm() {
 
       <Button type="submit" disabled={pending} className="w-full">
         <UserPlus data-icon="inline-start" />
-        {pending ? "Creating workspace…" : "Create workspace"}
+        {pending ? "Creating account…" : "Create account"}
       </Button>
     </form>
   );

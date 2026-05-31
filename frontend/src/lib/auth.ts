@@ -14,6 +14,21 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
     minPasswordLength: 8,
+    sendResetPassword: async ({ user, url }) => {
+      // TODO: replace with your email provider (Resend, Nodemailer, etc.)
+      // The url already contains the reset token as a query parameter.
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[password reset] ${user.email} → ${url}`);
+        return;
+      }
+      // Example with Resend:
+      // await resend.emails.send({
+      //   from: "noreply@punica.security",
+      //   to: user.email,
+      //   subject: "Reset your Punica password",
+      //   html: `<p>Click <a href="${url}">here</a> to reset your password. Link expires in 1 hour.</p>`,
+      // });
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
