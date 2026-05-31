@@ -1,0 +1,33 @@
+import { redirect } from "next/navigation";
+import { getActiveOrganization, getSession } from "@/lib/session";
+import { SettingsNav } from "@/components/dashboard/settings-nav";
+
+export default async function OrganizationSettingsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
+  const org = await getActiveOrganization().catch(() => null);
+
+  return (
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">Settings</p>
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+          {org?.name ?? "Organization"}
+        </h1>
+        <p className="text-muted-foreground">
+          Manage your organization profile, members, and invitations.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-8 md:flex-row">
+        <SettingsNav />
+        <div className="flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
